@@ -7,9 +7,14 @@ import android.util.JsonToken;
 import android.util.Log;
 import android.widget.Toast;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 import okhttp3.OkHttpClient;
@@ -20,6 +25,7 @@ public class PokeApi extends AsyncTask <String, String, Void> {
     private Context context;
     private String tag;
     private int cantRegistros;
+    private String result;
 
     public PokeApi(Context context, String tag) {
         this.context = context;
@@ -45,18 +51,18 @@ public class PokeApi extends AsyncTask <String, String, Void> {
 
         try {
             Response response = client.newCall(request).execute();
+            result = response.body().string();
 
-            InputStream is = response.body().byteStream();
 
             int code = response.code();
+            JSONObject jsonObject = new JSONObject(result);
             if (code == 200) {
-                cantRegistros = Integer.parseInt(response.header("Age"));
-              //  publishProgress("1", "Procesando diagnósticos CIE-10");
-                JsonReader jsonReader = new JsonReader(new InputStreamReader(is, "UTF-8"));
-                getFromJson(jsonReader);
+                Log.d(tag, result);
+                JSONArray jsonArray = jsonObject.getJSONArray("abilities");
+                CargarArray(jsonArray);
                 response.body().close();
             } else {
-               // Log.e(TAG, e.getMessage() == null ? e.toString() : e.getMessage());;
+
                 Log.e(tag,"Error 404");
             }
             response.body().close();
@@ -69,63 +75,30 @@ public class PokeApi extends AsyncTask <String, String, Void> {
         return null;
     }
 
-    private void getFromJson(JsonReader jsonReader) throws IOException {
-
-        String estado = "";
-        jsonReader.beginObject();
-        while(jsonReader.hasNext()) {
-            final String innerName = jsonReader.nextName();
-            //final boolean isInnerNull = jsonReader.peek() == JsonToken.NULL;
-            if (innerName.equals("abilities")) {
-                jsonReader.beginArray();
-                jsonReader.beginObject();
-                while (jsonReader.hasNext()) {
-                    final String innerName2 = jsonReader.nextName();
-                    if (innerName2.equals("ability")) {
-                        jsonReader.beginObject();
-                        while (jsonReader.hasNext()) {
-                            final String innerAtrib = jsonReader.nextName();
-                            if( innerAtrib.equals( "name" )) {
-                                // dx.setId(jsonReader.nextInt());
-                                 String nombre =jsonReader.nextString();
-                                 Log.d(tag,"Nombre = "+nombre);
-                            }else if(innerAtrib.equals("url")){
-                                // dx.setId(jsonReader.nextInt());
-                                String url =jsonReader.nextString();
-                                Log.d(tag,"URL = "+url);
-
-                            } else {
-                                jsonReader.skipValue();
-                            }
-
-                        }
-                        jsonReader.endObject();
+    private void CargarArray(JSONArray jsonArray){
+        ArrayList<String> Lista = new ArrayList<>();
+        for(int i=0;i<jsonArray.length();i++){
+            try {
+                JSONObject json = jsonArray.getJSONObject(i);
+                JSONObject jsonAbility = json.getJSONObject("ability");
+                //Aquí se obtiene el dato y es guardado en una lista
+                String name = jsonAbility.getString("name");
+                String url = jsonAbility.getString("url");
 
 
+                String isHidden = json.getString("is_hidden");
+                String slot = json.getString("slot");
 
+                Log.e(tag,name);
+                Log.e(tag,url);
+                Log.e(tag,isHidden);
+                Log.e(tag,slot);
 
-                    }else {
-                        jsonReader.skipValue();
-
-                    }
-
-                }
-                   jsonReader.endArray();
-
-                  jsonReader.endObject();
-              //
-
-
-                //jsonReader.endObject();
-
-
-            }else {
-                jsonReader.skipValue();
+                Lista.add(slot);
+            } catch (JSONException e) {
+                e.printStackTrace();
             }
-
         }
-        jsonReader.endObject();
-
     }
 
 
