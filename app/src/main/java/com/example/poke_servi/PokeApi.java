@@ -21,19 +21,19 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
 
-public class PokeApi extends AsyncTask <String, String, Void> {
+public class PokeApi extends AsyncTask <String, String, AtribuPoke> {
     private Context context;
     private String tag;
     private int cantRegistros;
     private String result;
-
+    private AtribuPoke atribupoke;
     public PokeApi(Context context, String tag) {
         this.context = context;
         this.tag = tag;
     }
     //nora
     @Override
-    protected Void doInBackground(String... params) {
+    protected AtribuPoke doInBackground(String... params) {
 
         String result;
         OkHttpClient client = new OkHttpClient.Builder()
@@ -58,8 +58,8 @@ public class PokeApi extends AsyncTask <String, String, Void> {
             JSONObject jsonObject = new JSONObject(result);
             if (code == 200) {
                 Log.d(tag, result);
-                JSONArray jsonArray = jsonObject.getJSONArray("abilities");
-                CargarArray(jsonArray);
+                //JSONArray jsonArray = jsonObject.getJSONArray("abilities");
+                 atribupoke = CargarArray(jsonObject);
                 response.body().close();
             } else {
 
@@ -72,33 +72,83 @@ public class PokeApi extends AsyncTask <String, String, Void> {
 
         }
 
-        return null;
+        return atribupoke;
     }
 
-    private void CargarArray(JSONArray jsonArray){
+
+
+    private AtribuPoke CargarArray(JSONObject jsonObject){
+        JSONArray jsonArray = null;
+        JSONArray jsonArrayForms = null;
+        AtribuPoke atribupoke = new AtribuPoke();
+
+        try {
+            jsonArray = jsonObject.getJSONArray("abilities");
+            int baseExperience = jsonObject.getInt("base_experience");
+            atribupoke.setBase_experience(baseExperience);
+            Log.e(tag, String.valueOf(baseExperience));
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
         ArrayList<String> Lista = new ArrayList<>();
         for(int i=0;i<jsonArray.length();i++){
             try {
                 JSONObject json = jsonArray.getJSONObject(i);
-                JSONObject jsonAbility = json.getJSONObject("ability");
-                //Aquí se obtiene el dato y es guardado en una lista
-                String name = jsonAbility.getString("name");
-                String url = jsonAbility.getString("url");
+                    JSONObject jsonAbility = json.getJSONObject("ability");
+                    //Aquí se obtiene el dato y es guardado en una lista
+                    String name = jsonAbility.getString("name");
+                    String url = jsonAbility.getString("url");
 
 
                 String isHidden = json.getString("is_hidden");
                 String slot = json.getString("slot");
+
 
                 Log.e(tag,name);
                 Log.e(tag,url);
                 Log.e(tag,isHidden);
                 Log.e(tag,slot);
 
+
                 Lista.add(slot);
+
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
+        try {
+            jsonArrayForms = jsonObject.getJSONArray("forms");
+
+
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        for(int i=0;i<jsonArrayForms.length();i++){
+            try {
+                JSONObject jsonForms = jsonArrayForms.getJSONObject(i);
+                String nameForms = jsonForms.getString("name");
+                String urlForms = jsonForms.getString("url");
+
+                Log.e(tag,nameForms);
+                Log.e(tag,urlForms);
+
+
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+
+
+        }
+
+
+return atribupoke;
+
+    }
+    @Override
+    protected void onPostExecute(AtribuPoke atribupoke) {
+        super.onPostExecute(atribupoke);
+
     }
 
 
