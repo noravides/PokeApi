@@ -25,6 +25,7 @@ public class PokeApi extends AsyncTask <String, String, Void> {
         this.context = context;
         this.tag = tag;
     }
+    //nora
     @Override
     protected Void doInBackground(String... params) {
 
