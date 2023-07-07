@@ -27,8 +27,10 @@ public class PokeApi extends AsyncTask <String, String, AtribuPoke> {
     private int cantRegistros;
     private String result;
     private AtribuPoke atribupoke;
-    public PokeApi(Context context, String tag) {
+    private OnSendPruebaListener listener;
+    public PokeApi(Context context, OnSendPruebaListener listener,String tag) {
         this.context = context;
+        this.listener = listener;
         this.tag = tag;
     }
     //nora
@@ -82,6 +84,9 @@ public class PokeApi extends AsyncTask <String, String, AtribuPoke> {
         JSONArray jsonArrayForms = null;
         AtribuPoke atribupoke = new AtribuPoke();
 
+        ArrayList<Abilities> arrayAbilities = new ArrayList<Abilities>();
+        ArrayList<Forms> arrayForms = new ArrayList<Forms>();
+
         try {
             jsonArray = jsonObject.getJSONArray("abilities");
             int baseExperience = jsonObject.getInt("base_experience");
@@ -93,30 +98,37 @@ public class PokeApi extends AsyncTask <String, String, AtribuPoke> {
         }
         ArrayList<String> Lista = new ArrayList<>();
         for(int i=0;i<jsonArray.length();i++){
+            Ability ability = new Ability();
+            Abilities abilities = new Abilities();
             try {
                 JSONObject json = jsonArray.getJSONObject(i);
                     JSONObject jsonAbility = json.getJSONObject("ability");
                     //Aquí se obtiene el dato y es guardado en una lista
                     String name = jsonAbility.getString("name");
                     String url = jsonAbility.getString("url");
-
+                    ability.setName(name);
+                    ability.setUrl(url);
+                    abilities.setAbility(ability);
 
                 String isHidden = json.getString("is_hidden");
                 String slot = json.getString("slot");
-
-
+                abilities.setIsHidden(isHidden);
+                abilities.setSlot(Integer.parseInt(slot));
+                arrayAbilities.add(abilities);
+               // atribupoke.setAbilities(arrayAbilities);
                 Log.e(tag,name);
                 Log.e(tag,url);
                 Log.e(tag,isHidden);
                 Log.e(tag,slot);
-
-
-                Lista.add(slot);
+               // Lista.add(slot);
 
             } catch (JSONException e) {
                 e.printStackTrace();
             }
         }
+
+        atribupoke.setAbilities(arrayAbilities);
+
         try {
             jsonArrayForms = jsonObject.getJSONArray("forms");
 
@@ -125,10 +137,18 @@ public class PokeApi extends AsyncTask <String, String, AtribuPoke> {
             e.printStackTrace();
         }
         for(int i=0;i<jsonArrayForms.length();i++){
+            Forms forms = new Forms();
             try {
                 JSONObject jsonForms = jsonArrayForms.getJSONObject(i);
                 String nameForms = jsonForms.getString("name");
                 String urlForms = jsonForms.getString("url");
+                forms.setName(nameForms);
+                forms.setUrl(urlForms);
+                arrayForms.add(forms);
+
+
+
+
 
                 Log.e(tag,nameForms);
                 Log.e(tag,urlForms);
@@ -140,6 +160,7 @@ public class PokeApi extends AsyncTask <String, String, AtribuPoke> {
 
 
         }
+        atribupoke.setForms(arrayForms);
 
 
 return atribupoke;
@@ -148,9 +169,15 @@ return atribupoke;
     @Override
     protected void onPostExecute(AtribuPoke atribupoke) {
         super.onPostExecute(atribupoke);
+        listener.onRequestFinished(atribupoke);
+
 
     }
 
+    public interface OnSendPruebaListener{
+        void onRequestFinished(AtribuPoke atribupoke);
 
+
+    }
 
 }
